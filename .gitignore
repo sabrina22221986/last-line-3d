@@ -1,0 +1,35 @@
+﻿# Dependencies and virtual environments
+node_modules/
+.venv/
+venv/
+
+# Build and test caches
+.vite/
+coverage/
+*.tsbuildinfo
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+.cache/
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# Editor and OS metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Keep only the self-contained offline build
+dist/*
+!dist/index.html
