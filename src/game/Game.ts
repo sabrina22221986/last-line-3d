@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { BUILDINGS, BASE_RADIUS, SOLDIERS, SPAWN_POINTS, WORLD_SIZE, waveStats } from './config';
+import { gestureDelta, gestureFrame, isTap, type TouchGestureFrame, type TouchPoint } from './input/TouchGesture';
 import { purchaseBuilding } from './rules';
 import { SaveManager } from './state/SaveManager';
 import { BuildSystem } from './systems/BuildSystem';
@@ -43,6 +44,9 @@ export class Game {
   private cameraDistance = 61;
   private dragStart: { x: number; y: number } | null = null;
   private rightDrag: { startX: number; startY: number; lastX: number; lastY: number; rotating: boolean } | null = null;
+  private touchPointers = new Map<number, TouchPoint>();
+  private touchGesture: TouchGestureFrame | null = null;
+  private multiTouchSequence = false;
   private selectionBox: HTMLElement;
   private ghost: THREE.Mesh | null = null;
   private selectedRecruit: SoldierKind | null = null;
@@ -202,6 +206,9 @@ export class Game {
   private bindInput(): void {
     const canvas = this.renderer.domElement;
     window.addEventListener('resize', () => this.resize());
+    window.visualViewport?.addEventListener('resize', () => this.resize());
+    document.addEventListener('gesturestart', (event) => event.preventDefault(), { passive: false });
+    document.addEventListener('gesturechange', (event) => event.preventDefault(), { passive: false });
     window.addEventListener('keydown', (event) => {
       this.pressed.add(event.code);
       if (event.code === 'Space') { event.preventDefault(); this.togglePause(); }
@@ -223,6 +230,21 @@ export class Game {
     }, { passive: true });
     canvas.addEventListener('pointerdown', (event) => {
       this.wakeAudio();
+      if (event.pointerType === 'touch') {
+        event.preventDefault();
+        this.updatePointer(event);
+        this.touchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        canvas.setPointerCapture(event.pointerId);
+        if (this.touchPointers.size === 1) {
+          this.dragStart = { x: event.clientX, y: event.clientY };
+        } else {
+          this.multiTouchSequence = true;
+          this.dragStart = null;
+          this.selectionBox.style.display = 'none';
+          this.touchGesture = gestureFrame([...this.touchPointers.values()]);
+        }
+        return;
+      }
       if (event.button === 0) {
         this.dragStart = { x: event.clientX, y: event.clientY };
         if (!this.buildSystem.selectedKind && !this.selectedRecruit) {
@@ -240,6 +262,36 @@ export class Game {
     });
     canvas.addEventListener('pointermove', (event) => {
       this.updatePointer(event);
+      if (event.pointerType === 'touch') {
+        if (!this.touchPointers.has(event.pointerId)) return;
+        event.preventDefault();
+        this.touchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        if (this.touchPointers.size >= 2) {
+          const points = [...this.touchPointers.values()];
+          if (!this.touchGesture) this.touchGesture = gestureFrame(points);
+          else {
+            const delta = gestureDelta(this.touchGesture, points);
+            if (delta) {
+              this.cameraYaw -= delta.deltaX * 0.008;
+              this.cameraPitch = THREE.MathUtils.clamp(
+                this.cameraPitch + delta.deltaY * 0.006,
+                0.35,
+                1.25,
+              );
+              this.cameraDistance = THREE.MathUtils.clamp(
+                this.cameraDistance - delta.distanceDelta * 0.075,
+                28,
+                92,
+              );
+              this.touchGesture = delta.frame;
+            }
+          }
+        } else if (!this.multiTouchSequence) {
+          if (this.buildSystem.selectedKind) this.updateGhost();
+          else if (this.selectedRecruit) this.updateRecruitGhost();
+        }
+        return;
+      }
       if (this.rightDrag) {
         const total = Math.hypot(
           event.clientX - this.rightDrag.startX,
@@ -264,6 +316,32 @@ export class Game {
       else if (this.dragStart) this.setSelectionBox(event.clientX, event.clientY);
     });
     canvas.addEventListener('pointerup', (event) => {
+      if (event.pointerType === 'touch') {
+        event.preventDefault();
+        const start = this.dragStart;
+        const wasMultiTouch = this.multiTouchSequence;
+        this.touchPointers.delete(event.pointerId);
+        if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
+        if (wasMultiTouch) {
+          this.dragStart = null;
+          this.selectionBox.style.display = 'none';
+          if (this.touchPointers.size < 2) this.touchGesture = null;
+          if (this.touchPointers.size === 0) this.multiTouchSequence = false;
+          return;
+        }
+        this.updatePointer(event);
+        if (start && isTap(start, { x: event.clientX, y: event.clientY }, 12)) {
+          if (this.tryToggleGate(event)) {
+            this.finishTouchSequence();
+            return;
+          }
+          if (this.selectedRecruit) this.tryDeployRecruit();
+          else if (this.buildSystem.selectedKind) this.tryBuild();
+          else this.finishSelection(event);
+        }
+        this.finishTouchSequence();
+        return;
+      }
       if (event.button === 2 && this.rightDrag) {
         const wasRotating = this.rightDrag.rotating;
         this.rightDrag = null;
@@ -297,7 +375,16 @@ export class Game {
       this.dragStart = null;
       this.selectionBox.style.display = 'none';
     });
-    canvas.addEventListener('pointercancel', () => {
+    canvas.addEventListener('pointercancel', (event) => {
+      if (event.pointerType === 'touch') {
+        this.touchPointers.delete(event.pointerId);
+        if (this.touchPointers.size === 0) {
+          this.multiTouchSequence = false;
+          this.touchGesture = null;
+          this.dragStart = null;
+        }
+        this.selectionBox.style.display = 'none';
+      }
       this.rightDrag = null;
       canvas.style.cursor = '';
     });
@@ -315,6 +402,13 @@ export class Game {
       this.updatePointer(event);
       this.recruitDropped = this.tryDeployRecruit();
     });
+  }
+
+  private finishTouchSequence(): void {
+    this.dragStart = null;
+    this.selectionBox.style.display = 'none';
+    this.touchGesture = null;
+    if (this.touchPointers.size === 0) this.multiTouchSequence = false;
   }
 
   private frame(time: number): void {
@@ -613,8 +707,9 @@ export class Game {
     if (!this.dragStart) return;
     const dx = Math.abs(event.clientX - this.dragStart.x);
     const dy = Math.abs(event.clientY - this.dragStart.y);
+    const clickTolerance = event.pointerType === 'touch' ? 12 : 5;
     const selected: Soldier[] = [];
-    if (dx < 5 && dy < 5) {
+    if (dx <= clickTolerance && dy <= clickTolerance) {
       this.updatePointer(event);
       this.raycaster.setFromCamera(this.pointer, this.camera);
       const hits = this.raycaster.intersectObjects(this.unitSystem.soldiers.map((soldier) => soldier.mesh), true);
@@ -713,7 +808,10 @@ export class Game {
     this.recruitGhost.add(body, ring);
     this.recruitGhost.visible = false;
     this.scene.add(this.recruitGhost);
-    this.hud.toast(this.text(`拖动${spec.label}到战场，或点击地图部署`, 'Drag the troop onto the field, or click to deploy'));
+    const touchDevice = navigator.maxTouchPoints > 0 || matchMedia('(pointer: coarse)').matches;
+    this.hud.toast(touchDevice
+      ? this.text(`点按基地外空地部署${spec.label}`, 'Tap clear ground outside the base to deploy')
+      : this.text(`拖动${spec.label}到战场，或点击地图部署`, 'Drag the troop onto the field, or click to deploy'));
   }
 
   private updateRecruitGhost(): void {

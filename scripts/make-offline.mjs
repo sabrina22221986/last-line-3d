@@ -24,6 +24,7 @@ html = html
   .replace(styleMatch[0], () => `<style>${safeCss}</style>`)
   .replace(scriptMatch[0], () => `<script type="module">${safeJavaScript}</script>`)
   .replace('</head>', '<meta name="offline-ready" content="true"></head>');
+html = html.replace(/\r\n/g, '\n').replace(/[ \t]+(?=\n)/g, '');
 
 await writeFile(indexPath, html, 'utf8');
 console.log(`离线单文件已生成：dist/index.html (${(Buffer.byteLength(html) / 1024).toFixed(1)} KB)`);

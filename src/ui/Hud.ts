@@ -46,10 +46,11 @@ export class Hud {
   private activeBuild: BuildingKind | null = null;
   private language: Language = 'zh';
   private lastSnapshot?: GameSnapshot;
+  private readonly touchDevice = navigator.maxTouchPoints > 0 || matchMedia('(pointer: coarse)').matches;
 
   constructor(actions: HudActions) {
     const root = document.createElement('div');
-    root.className = 'hud';
+    root.className = `hud${this.touchDevice ? ' touch-device' : ''}`;
     root.innerHTML = `
       <header class="topbar glass">
         <div class="brand"><span class="brand-mark">Λ</span><div><b data-zh="最后防线" data-en="LAST LINE">最后防线</b><small>LAST LINE // ZONE 07</small></div></div>
@@ -68,7 +69,7 @@ export class Hud {
         <button class="wave-button" data-action="wave" data-zh="提前迎战 +资源" data-en="CALL WAVE +SCRAP">提前迎战 +资源</button>
       </aside>
       <section class="build-panel glass">
-        <div class="panel-title"><span data-zh="建造防线" data-en="BUILD DEFENSES">建造防线</span><small data-zh="B 取消 · R 旋转" data-en="B CANCEL · R ROTATE">B 取消 · R 旋转</small></div>
+        <div class="panel-title"><span data-zh="建造防线" data-en="BUILD DEFENSES">建造防线</span><small class="desktop-only" data-zh="B 取消 · R 旋转" data-en="B CANCEL · R ROTATE">B 取消 · R 旋转</small><small class="touch-only" data-zh="点建筑，再点空地" data-en="TAP ITEM, THEN GROUND">点建筑，再点空地</small></div>
         <div id="buildGrid" class="build-grid"></div>
       </section>
       <section class="orders glass">
@@ -80,18 +81,22 @@ export class Hud {
         </div>
       </section>
       <section class="recruit-panel glass">
-        <div class="panel-title"><span data-zh="拖拽部署士兵" data-en="DRAG TO DEPLOY">拖拽部署士兵</span><small data-zh="拖到基地外空地" data-en="DROP OUTSIDE THE BASE">拖到基地外空地</small></div>
+        <div class="panel-title"><span data-zh="部署士兵" data-en="DEPLOY TROOPS">部署士兵</span><small class="desktop-only" data-zh="拖放，或点兵种再点空地" data-en="DRAG, OR TAP THEN GROUND">拖放，或点兵种再点空地</small><small class="touch-only" data-zh="点兵种，再点空地" data-en="TAP TROOP, THEN GROUND">点兵种，再点空地</small></div>
         <div id="recruitGrid" class="recruit-grid"></div>
       </section>
       <div class="controls-hint glass">
-        <span><i>WASD</i> <b data-zh="移动视角" data-en="MOVE CAMERA">移动视角</b></span>
-        <span><i data-zh="左键空地" data-en="LMB GROUND">左键空地</i> <b data-zh="移动士兵" data-en="MOVE TROOPS">移动士兵</b></span>
-        <span><i data-zh="右键短按" data-en="RMB CLICK">右键短按</i> <b data-zh="指定防守" data-en="DEFEND HERE">指定防守</b></span>
-        <span><i data-zh="右键拖动" data-en="RMB DRAG">右键拖动</i> <b data-zh="旋转 / 俯仰" data-en="ORBIT / TILT">旋转 / 俯仰</b></span>
-        <span><i data-zh="左键城门" data-en="LMB GATE">左键城门</i> <b data-zh="开关城门" data-en="OPEN / CLOSE">开关城门</b></span>
-        <span><i data-zh="左键拖动" data-en="LMB DRAG">左键拖动</i> <b data-zh="框选" data-en="SELECT">框选</b></span>
-        <span><i data-zh="滚轮" data-en="WHEEL">滚轮</i> <b data-zh="缩放" data-en="ZOOM">缩放</b></span>
+        <span class="desktop-only"><i>WASD</i> <b data-zh="移动视角" data-en="MOVE CAMERA">移动视角</b></span>
+        <span class="desktop-only"><i data-zh="左键空地" data-en="LMB GROUND">左键空地</i> <b data-zh="移动士兵" data-en="MOVE TROOPS">移动士兵</b></span>
+        <span class="desktop-only"><i data-zh="右键短按" data-en="RMB CLICK">右键短按</i> <b data-zh="指定防守" data-en="DEFEND HERE">指定防守</b></span>
+        <span class="desktop-only"><i data-zh="右键拖动" data-en="RMB DRAG">右键拖动</i> <b data-zh="旋转 / 俯仰" data-en="ORBIT / TILT">旋转 / 俯仰</b></span>
+        <span class="desktop-only"><i data-zh="左键城门" data-en="LMB GATE">左键城门</i> <b data-zh="开关城门" data-en="OPEN / CLOSE">开关城门</b></span>
+        <span class="desktop-only"><i data-zh="左键拖动" data-en="LMB DRAG">左键拖动</i> <b data-zh="框选" data-en="SELECT">框选</b></span>
+        <span class="desktop-only"><i data-zh="滚轮" data-en="WHEEL">滚轮</i> <b data-zh="缩放" data-en="ZOOM">缩放</b></span>
+        <span class="touch-only"><i data-zh="单指点按" data-en="ONE-FINGER TAP">单指点按</i> <b data-zh="选择 / 放置 / 移动" data-en="SELECT / PLACE / MOVE">选择 / 放置 / 移动</b></span>
+        <span class="touch-only"><i data-zh="双指拖动" data-en="TWO-FINGER DRAG">双指拖动</i> <b data-zh="旋转 / 俯仰" data-en="ORBIT / TILT">旋转 / 俯仰</b></span>
+        <span class="touch-only"><i data-zh="双指捏合" data-en="PINCH">双指捏合</i> <b data-zh="缩放" data-en="ZOOM">缩放</b></span>
       </div>
+      <div class="orientation-notice" data-zh="建议将 iPad 横屏游玩" data-en="LANDSCAPE RECOMMENDED ON iPAD">建议将 iPad 横屏游玩</div>
       <div id="toast" class="toast"></div>
       <div id="homeScreen" class="overlay home-screen">
         <button class="home-language" data-action="language">EN</button>
@@ -111,7 +116,7 @@ export class Hud {
               <em><span data-zh="最高生存" data-en="BEST SURVIVAL">最高生存</span> <strong id="highSurvival">0</strong> <span data-zh="波" data-en="WAVES">波</span></em>
             </button>
           </div>
-          <div class="home-tip" data-zh="两种模式的最高波数分别保存" data-en="BEST WAVES ARE SAVED SEPARATELY">两种模式的最高波数分别保存</div>
+          <div class="home-tip" data-zh="两种模式的最高波数分别保存 · iPad 建议横屏游玩" data-en="BEST WAVES ARE SAVED SEPARATELY · LANDSCAPE RECOMMENDED ON iPAD">两种模式的最高波数分别保存 · iPad 建议横屏游玩</div>
           <article class="home-guide glass" aria-labelledby="guideTitle">
           <header class="guide-header">
             <div><div class="eyebrow">FIELD MANUAL // GUIDE</div><h2 id="guideTitle" data-zh="游戏指南" data-en="GAME GUIDE">游戏指南</h2></div>
@@ -123,11 +128,11 @@ export class Hud {
             </section>
             <section>
               <h3><i>02</i><span data-zh="镜头操作" data-en="CAMERA">镜头操作</span></h3>
-              <p data-zh="使用 WASD 或方向键平移，Q / E 旋转；按住右键拖动可旋转并俯仰镜头，滚轮缩放，H 回到基地。空格暂停，顶部速度按钮切换游戏速度。" data-en="Use WASD or arrows to pan and Q / E to rotate. Hold and drag RMB to orbit and tilt, use the wheel to zoom, and H to return to base. Space pauses; the top button changes speed.">使用 WASD 或方向键平移，Q / E 旋转；按住右键拖动可旋转并俯仰镜头，滚轮缩放，H 回到基地。空格暂停，顶部速度按钮切换游戏速度。</p>
+              <p data-zh="桌面端使用 WASD / 方向键平移、Q / E 旋转，按住右键拖动可旋转并俯仰，滚轮缩放。iPad 建议横屏：双指拖动旋转/俯仰，双指捏合缩放。空格或顶部按钮可暂停。" data-en="Desktop: use WASD/arrows to pan, Q/E to rotate, drag RMB to orbit/tilt, and use the wheel to zoom. iPad is best in landscape: two-finger drag orbits/tilts and pinch zooms. Use Space or the top button to pause.">桌面端使用 WASD / 方向键平移、Q / E 旋转，按住右键拖动可旋转并俯仰，滚轮缩放。iPad 建议横屏：双指拖动旋转/俯仰，双指捏合缩放。空格或顶部按钮可暂停。</p>
             </section>
             <section>
               <h3><i>03</i><span data-zh="部署、选中与移动" data-en="DEPLOY, SELECT & MOVE">部署、选中与移动</span></h3>
-              <p data-zh="从右侧兵种栏拖到基地外空地部署，也可先点兵种再点地图。左键单击士兵进行选择，Shift 可多选；左键拖动可框选。选中后左键点击空地会移动并列阵，短按右键则指定防守阵地。" data-en="Drag troops from the right roster onto clear ground outside the base, or click a troop then the map. Left-click to select; hold Shift for multi-select, or drag a box. Left-click ground to move and form up; a short RMB click sets a defensive position.">从右侧兵种栏拖到基地外空地部署，也可先点兵种再点地图。左键单击士兵进行选择，Shift 可多选；左键拖动可框选。选中后左键点击空地会移动并列阵，短按右键则指定防守阵地。</p>
+              <p data-zh="iPad：先点兵种再点基地外空地部署；单指点士兵选择，再点空地移动；单指点城门开关。桌面端还可拖放部署、Shift 多选、左键框选及短按右键指定防守阵地。" data-en="iPad: tap a troop type, then clear ground outside the base to deploy; tap a soldier to select, then tap ground to move; tap a gate to toggle it. Desktop also supports drag-and-drop deployment, Shift multi-select, box selection, and short RMB click to assign a defensive position.">iPad：先点兵种再点基地外空地部署；单指点士兵选择，再点空地移动；单指点城门开关。桌面端还可拖放部署、Shift 多选、左键框选及短按右键指定防守阵地。</p>
             </section>
             <section>
               <h3><i>04</i><span data-zh="作战命令" data-en="COMBAT ORDERS">作战命令</span></h3>
@@ -135,7 +140,7 @@ export class Hud {
             </section>
             <section>
               <h3><i>05</i><span data-zh="建造与城门" data-en="BUILDING & GATES">建造与城门</span></h3>
-              <p data-zh="点击左下建造项后在网格放置，R 旋转，B 或 Esc 取消；数字 4—9 可快速选择前六种防线。墙、路障、塔和关闭的城门可以完全封死路线；丧尸会推进到阻挡前攻击，摧毁后继续前进。点击已建成的城门即可开关：关闭时阻挡，打开时允许通行。" data-en="Choose a defense at bottom-left and place it on the grid. R rotates; B or Esc cancels; keys 4–9 select the first six defenses. Walls, barriers, towers, and closed gates may seal every route; zombies advance to blockers, attack them, and continue after destroying them. Click a built gate to toggle it: closed blocks passage, open allows movement.">点击左下建造项后在网格放置，R 旋转，B 或 Esc 取消；数字 4—9 可快速选择前六种防线。墙、路障、塔和关闭的城门可以完全封死路线；丧尸会推进到阻挡前攻击，摧毁后继续前进。点击已建成的城门即可开关：关闭时阻挡，打开时允许通行。</p>
+              <p data-zh="点左下建造项，再点网格空地放置；再次点同一项可取消。桌面端也可用 R 旋转、B / Esc 取消及数字 4—9 快选。墙、路障、塔和关闭的城门可封路；点已建成的城门即可开关。" data-en="Tap a defense at bottom-left, then tap clear grid ground to place it; tap the same item again to cancel. Desktop also supports R to rotate, B/Esc to cancel, and keys 4–9 for quick selection. Walls, barriers, towers, and closed gates block routes; tap a built gate to toggle it.">点左下建造项，再点网格空地放置；再次点同一项可取消。桌面端也可用 R 旋转、B / Esc 取消及数字 4—9 快选。墙、路障、塔和关闭的城门可封路；点已建成的城门即可开关。</p>
             </section>
             <section>
               <h3><i>06</i><span data-zh="资源与维修" data-en="RESOURCES & REPAIR">资源与维修</span></h3>
@@ -183,7 +188,7 @@ export class Hud {
       button.className = 'recruit-item';
       button.title = spec.description;
       button.dataset.kind = kind;
-      button.draggable = true;
+      button.draggable = !this.touchDevice;
       button.innerHTML = `<b>${spec.icon}</b><span>${spec.label}<small>◈ ${spec.cost}</small></span>`;
       button.addEventListener('click', () => actions.onRecruit(kind));
       button.addEventListener('dragstart', (event) => {
@@ -256,7 +261,9 @@ export class Hud {
       <div><small>${en ? 'HOSTILES' : '敌军信号'}</small><b>${snapshot.enemies}</b></div>`;
     this.selection.innerHTML = snapshot.selected
       ? `<b>${en ? `${snapshot.selected} TROOPS SELECTED` : `已选 ${snapshot.selected} 名士兵`}</b><small>${snapshot.selectedRoles} · ${this.stanceName(snapshot.stance)} · ${en ? 'Click ground to move' : '点击空地移动'}</small>`
-      : `<b>${en ? 'NO TROOPS SELECTED' : '未选择士兵'}</b><small>${en ? 'Drag to select combat units' : '拖动鼠标框选作战单位'}</small>`;
+      : `<b>${en ? 'NO TROOPS SELECTED' : '未选择士兵'}</b><small>${this.touchDevice
+        ? (en ? 'Tap a soldier to select' : '点按士兵进行选择')
+        : (en ? 'Drag to select combat units' : '拖动鼠标框选作战单位')}</small>`;
     this.waveStatus.innerHTML = spawning
       ? `<b>${en ? `WAVE ${snapshot.wave} ENGAGED` : `第 ${snapshot.wave} 波交战中`}</b><span>${en ? `${remaining} signals incoming` : `${remaining} 个信号正在接近`}</span>`
       : `<b>${en ? `NEXT WAVE: ${Math.max(0, Math.ceil(nextWave))}s` : `下一波：${Math.max(0, Math.ceil(nextWave))} 秒`}</b><span>${en ? 'Use the break to build defenses' : '利用间隙修筑防线'}</span>`;

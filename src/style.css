@@ -8,12 +8,20 @@
   --danger: #f25c4b;
   --panel: rgba(11, 21, 24, .83);
   --line: rgba(150, 220, 195, .16);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
 }
 
 * { box-sizing: border-box; }
-html, body, #app { width: 100%; height: 100%; margin: 0; overflow: hidden; user-select: none; }
-canvas { display: block; cursor: crosshair; }
-button { color: inherit; font: inherit; }
+html, body, #app { width: 100%; height: 100%; height: 100dvh; margin: 0; overflow: hidden; user-select: none; overscroll-behavior: none; }
+body { position: fixed; inset: 0; -webkit-user-select: none; -webkit-touch-callout: none; }
+canvas { display: block; cursor: crosshair; touch-action: none; }
+button { color: inherit; font: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.touch-only { display: none !important; }
+.touch-device .desktop-only { display: none !important; }
+.touch-device .touch-only { display: inline-flex !important; }
 
 .hud { position: fixed; inset: 0; pointer-events: none; }
 .glass {
@@ -141,6 +149,7 @@ button { color: inherit; font: inherit; }
 }
 .controls-hint i { color: #d1dfda; font-style: normal; border: 1px solid #596b65; padding: 1px 4px; margin-right: 3px; }
 .controls-hint b { font-weight: 400; }
+.orientation-notice { display: none; }
 .toast {
   position: absolute; left: 50%; top: 105px; transform: translate(-50%, -12px);
   padding: 9px 20px; background: rgba(17, 43, 35, .93); border: 1px solid var(--mint);
@@ -156,6 +165,8 @@ button { color: inherit; font: inherit; }
   z-index: 20; align-items: start; justify-items: center; overflow-y: auto; background:
     radial-gradient(circle at 50% 42%, rgba(39, 105, 82, .22), transparent 38%),
     linear-gradient(135deg, rgba(4,9,11,.96), rgba(8,18,19,.91));
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
 }
 .home-language {
   position: absolute; right: 28px; top: 24px; width: 48px; height: 36px;
@@ -219,6 +230,58 @@ button { color: inherit; font: inherit; }
 .game-over p { color: #91a19c; font-size: 13px; }
 .game-over button { margin-top: 12px; padding: 10px 35px; background: var(--danger); border: 0; color: white; cursor: pointer; }
 
+.hud.touch-device .topbar {
+  top: calc(var(--safe-top) + 8px); left: calc(var(--safe-left) + 8px);
+  right: calc(var(--safe-right) + 8px); height: 58px; padding: 0 10px;
+}
+.hud.touch-device .brand { width: 180px; }
+.hud.touch-device .brand-mark { width: 34px; height: 34px; margin-right: 9px; }
+.hud.touch-device .stats { gap: clamp(7px, 2vw, 18px); }
+.hud.touch-device .stats > div { min-width: 72px; }
+.hud.touch-device .stats small { font-size: 8px; }
+.hud.touch-device .stats b { font-size: 14px; }
+.hud.touch-device .base-stat { min-width: 116px !important; }
+.hud.touch-device .top-actions button,
+.hud.touch-device .wave-button,
+.hud.touch-device .order-buttons button,
+.hud.touch-device .build-item,
+.hud.touch-device .recruit-item,
+.hud.touch-device .home-language,
+.hud.touch-device .mode-card {
+  min-height: 44px;
+}
+.hud.touch-device .top-actions button { width: 44px; height: 44px; }
+.hud.touch-device .mission {
+  left: calc(var(--safe-left) + 8px); top: calc(var(--safe-top) + 74px);
+}
+.hud.touch-device .controls-hint {
+  right: calc(var(--safe-right) + 8px); top: calc(var(--safe-top) + 74px);
+  grid-template-columns: 1fr; gap: 7px; font-size: 10px;
+}
+.hud.touch-device .build-panel {
+  left: calc(var(--safe-left) + 8px); bottom: calc(var(--safe-bottom) + 8px);
+  width: min(50vw, 510px); padding: 9px;
+}
+.hud.touch-device .build-grid { grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.hud.touch-device .build-item { min-height: 44px; padding: 5px; }
+.hud.touch-device .build-item > span { font-size: 9px; }
+.hud.touch-device .orders {
+  right: calc(var(--safe-right) + 8px); bottom: calc(var(--safe-bottom) + 8px);
+  width: min(32vw, 330px); padding: 9px;
+}
+.hud.touch-device .recruit-panel {
+  right: calc(var(--safe-right) + 8px); bottom: calc(var(--safe-bottom) + 126px);
+  width: min(32vw, 330px); padding: 9px;
+}
+.hud.touch-device .recruit-item { min-height: 44px; }
+.hud.touch-device .toast { top: calc(var(--safe-top) + 76px); max-width: 62vw; text-align: center; }
+.hud.touch-device .home-language {
+  right: calc(var(--safe-right) + 14px); top: calc(var(--safe-top) + 14px);
+}
+.hud.touch-device .home-content {
+  padding-bottom: calc(var(--safe-bottom) + 44px);
+}
+
 @media (max-width: 900px) {
   .brand { width: 180px; }
   .stats { gap: 12px; }
@@ -229,6 +292,18 @@ button { color: inherit; font: inherit; }
   .mode-card { min-height: 200px; }
   .home-content { padding: 76px 0 40px; }
   .guide-scroll { grid-template-columns: 1fr; }
+}
+
+@media (pointer: coarse) and (orientation: portrait) {
+  .hud.touch-device .orientation-notice {
+    display: block; position: absolute; z-index: 15;
+    top: calc(var(--safe-top) + 74px); left: 50%; transform: translateX(-50%);
+    padding: 7px 12px; color: var(--amber); background: rgba(42,31,14,.9);
+    border: 1px solid rgba(240,184,90,.55); border-radius: 4px; font-size: 11px;
+    white-space: nowrap; pointer-events: none;
+  }
+  .hud.touch-device .mission { display: none; }
+  .hud.touch-device .controls-hint { top: calc(var(--safe-top) + 112px); }
 }
 
 @media (max-width: 560px), (max-height: 680px) {

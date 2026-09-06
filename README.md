@@ -24,11 +24,36 @@ npm run dev
 
 浏览器打开终端中显示的本地地址即可游玩。生产构建使用 `npm run build`，测试使用 `npm test`。
 
+### iPad 通过局域网游玩
+
+iPad 和电脑连接同一个 Wi‑Fi，建议先把 iPad 转为横屏，然后在 Windows 电脑上任选一种方式启动：
+
+- 双击项目根目录的 `start-lan.cmd`；首次运行会自动安装依赖。
+- 或在终端执行 `npm run dev:lan`。
+
+保持终端窗口开启，在输出的 `Network` 地址中选择电脑的局域网地址（例如 `http://192.168.1.20:5173/`），用 iPad Safari 打开。若 Windows 防火墙首次询问，请只允许当前受信任的“专用网络”；如果没有显示 `Network` 地址，可运行 `ipconfig` 查找当前 Wi‑Fi 的 IPv4 地址，再访问 `http://该地址:5173/`。
+
+如需从生产构建提供服务，可先执行 `npm run build`，再执行 `npm run preview:lan`，并使用终端显示的局域网地址。
+
 ## 完全离线使用
 
 执行一次 `npm run build` 后，直接双击 [`dist/index.html`](dist/index.html) 即可游玩。这个文件已经内嵌全部程序和样式，不需要网络、服务器或安装依赖，也不会请求在线字体或素材。可以把该 HTML 文件复制到其他 Windows 电脑使用。
 
+该单文件继续面向桌面浏览器。iPadOS Safari /“文件”App 对 `file://` 本地 HTML、模块脚本和相关资源加载有沙盒限制，不能把“在文件中点开 HTML”视为可靠运行方式；iPad 请使用上面的同一 Wi‑Fi 局域网服务器方式，游戏内容本身无需公网。
+
 ## 操作
+
+### iPad / 触摸
+
+- 建议横屏，以获得完整按钮区和战场视野。
+- 单指点模式卡进入游戏；点建筑后再点战场空地进行放置；再次点同一建筑可取消。
+- 点兵种后再点基地外空地部署。触摸端不依赖 HTML5 拖拽。
+- 单指点士兵进行选择，再点空地移动并列阵；点命令按钮切换进攻、防御或撤退。
+- 单指点已建成的城门即可开关。
+- 双指同时拖动：旋转与俯仰镜头；双指捏合：缩放。
+- 游戏画布会阻止 Safari 页面滚动和缩放冲突；主页指南仍可单指上下滚动。
+
+### 桌面
 
 - `WASD` / 方向键：移动上帝视角
 - `Q` / `E`：旋转视角
@@ -59,6 +84,11 @@ npm run dev
 
 ## Controls (English)
 
+- iPad: landscape is recommended. Tap a mode to start; tap a defense then clear ground to build; tap a troop type then clear ground outside the base to deploy.
+- Tap a soldier, then tap clear ground to move. Tap a completed gate to open or close it. Tap the order buttons for Attack, Defend, or Retreat.
+- Two-finger drag orbits/tilts the camera; pinch zooms. Touch deployment does not rely on HTML5 drag-and-drop.
+- To play on iPad without public internet, connect it to the same Wi-Fi as the PC, run `start-lan.cmd` or `npm run dev:lan`, and open the shown Network URL in Safari.
+- The self-contained `dist/index.html` remains available for desktop offline use. iPadOS Safari/Files does not reliably run local `file://` HTML, so use the LAN server on iPad.
 - Hold and drag RMB to orbit/tilt the camera; a short RMB click still assigns a defensive position.
 - Left-click a completed gate to open or close it. Open gates allow passage; closed gates block zombies and update pathfinding.
 - Concrete Wall: 35 scrap, 600 HP, pure blocking with no damage.
