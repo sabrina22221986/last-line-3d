@@ -153,7 +153,7 @@ button { color: inherit; font: inherit; }
 .overlay { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(5,9,11,.72); pointer-events: auto; }
 .overlay.hidden { display: none; }
 .home-screen {
-  z-index: 20; overflow-y: auto; background:
+  z-index: 20; align-items: start; justify-items: center; overflow-y: auto; background:
     radial-gradient(circle at 50% 42%, rgba(39, 105, 82, .22), transparent 38%),
     linear-gradient(135deg, rgba(4,9,11,.96), rgba(8,18,19,.91));
 }
@@ -161,7 +161,7 @@ button { color: inherit; font: inherit; }
   position: absolute; right: 28px; top: 24px; width: 48px; height: 36px;
   color: var(--mint); background: rgba(20,35,35,.8); border: 1px solid var(--mint); cursor: pointer;
 }
-.home-content { width: min(820px, 90vw); padding: 28px 0; text-align: center; }
+.home-content { width: min(900px, 90vw); padding: 28px 0 54px; text-align: center; }
 .home-kicker { color: var(--mint); font: 600 11px "Barlow Condensed"; letter-spacing: 5px; }
 .home-content > h1 {
   margin: 5px 0 4px; font: 700 clamp(52px, 8vw, 82px) "Barlow Condensed", "Noto Sans SC";
@@ -191,40 +191,18 @@ button { color: inherit; font: inherit; }
 }
 .mode-card.survival em { border-color: var(--amber); }
 .mode-card strong { color: #fff; font: 700 20px "Barlow Condensed"; margin: 0 3px; }
-.guide-open {
-  display: inline-flex; align-items: center; gap: 10px; margin-top: 18px; padding: 9px 20px;
-  color: var(--mint); background: rgba(33,71,61,.18); border: 1px solid rgba(89,224,174,.38);
-  cursor: pointer; letter-spacing: 1px;
-}
-.guide-open:hover { background: rgba(63,154,122,.2); border-color: var(--mint); }
-.guide-open > span {
-  display: grid; place-items: center; width: 21px; height: 21px; border: 1px solid currentColor;
-  border-radius: 50%; font: 700 12px "Barlow Condensed";
-}
-.guide-open b { font-size: 12px; }
-.guide-open small { color: #75968b; font: 600 9px "Barlow Condensed"; }
-.home-tip { margin-top: 12px; color: #53655f; font-size: 10px; letter-spacing: 1px; }
-
-.guide-overlay {
-  z-index: 30; padding: 24px; background: rgba(3,8,10,.88); backdrop-filter: blur(8px);
-}
-.guide-panel {
-  display: flex; flex-direction: column; width: min(820px, 94vw); max-height: min(760px, 90dvh);
-  overflow: hidden; border-top: 2px solid var(--mint); border-radius: 5px; text-align: left;
+.home-tip { margin: 14px 0 24px; color: #53655f; font-size: 10px; letter-spacing: 1px; }
+.home-guide {
+  width: 100%; overflow: hidden; border-top: 2px solid var(--mint);
+  border-radius: 5px; text-align: left;
 }
 .guide-header {
-  display: flex; align-items: center; justify-content: space-between; flex: none;
+  display: flex; align-items: center;
   padding: 20px 24px 15px; border-bottom: 1px solid var(--line);
 }
 .guide-header h2 { margin: 4px 0 0; font: 700 28px "Barlow Condensed", "Noto Sans SC"; letter-spacing: 3px; }
-.guide-close {
-  width: 38px; height: 38px; color: #91aaa2; background: rgba(255,255,255,.03);
-  border: 1px solid var(--line); font-size: 25px; line-height: 1; cursor: pointer;
-}
-.guide-close:hover { color: var(--mint); border-color: var(--mint); }
 .guide-scroll {
   display: grid; grid-template-columns: 1fr 1fr; gap: 0 26px; padding: 8px 24px 20px;
-  overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--mint) rgba(255,255,255,.05);
 }
 .guide-scroll section { padding: 16px 0; border-bottom: 1px solid var(--line); }
 .guide-scroll h3 { display: flex; align-items: center; gap: 9px; margin: 0 0 8px; font-size: 13px; letter-spacing: 1px; }
@@ -232,8 +210,8 @@ button { color: inherit; font: inherit; }
   color: var(--mint); font: 600 10px "Barlow Condensed"; font-style: normal; letter-spacing: 1px;
 }
 .guide-scroll p { margin: 0; color: #91a59e; font-size: 11px; line-height: 1.75; user-select: text; }
-.guide-panel footer {
-  flex: none; padding: 10px 24px; color: #61766f; border-top: 1px solid var(--line);
+.home-guide footer {
+  padding: 10px 24px; color: #61766f; border-top: 1px solid var(--line);
   font: 600 9px "Barlow Condensed"; letter-spacing: 2px; text-align: right;
 }
 .game-over { width: 420px; padding: 35px; text-align: center; border-top: 2px solid var(--danger); }
@@ -249,7 +227,7 @@ button { color: inherit; font: inherit; }
   .controls-hint { display: none; }
   .mode-grid { grid-template-columns: 1fr; }
   .mode-card { min-height: 200px; }
-  .home-content { padding: 76px 0 28px; }
+  .home-content { padding: 76px 0 40px; }
   .guide-scroll { grid-template-columns: 1fr; }
 }
 
@@ -264,11 +242,10 @@ button { color: inherit; font: inherit; }
   .mode-card > p { min-height: 0; margin: 8px 0; line-height: 1.5; }
   .mode-card em { margin-top: 6px; }
   .mode-card .mode-icon { font-size: 68px; }
-  .guide-overlay { align-items: stretch; padding: 10px; }
-  .guide-panel { width: 100%; max-height: calc(100dvh - 20px); }
+  .home-tip { margin-bottom: 18px; }
   .guide-header { padding: 14px 15px 11px; }
   .guide-header h2 { font-size: 23px; }
   .guide-scroll { padding: 4px 15px 14px; }
   .guide-scroll section { padding: 13px 0; }
-  .guide-panel footer { padding: 9px 15px; }
+  .home-guide footer { padding: 9px 15px; }
 }

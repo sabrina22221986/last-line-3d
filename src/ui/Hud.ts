@@ -111,17 +111,10 @@ export class Hud {
               <em><span data-zh="最高生存" data-en="BEST SURVIVAL">最高生存</span> <strong id="highSurvival">0</strong> <span data-zh="波" data-en="WAVES">波</span></em>
             </button>
           </div>
-          <button class="guide-open" data-action="guide">
-            <span>?</span><b data-zh="游戏指南" data-en="GAME GUIDE">游戏指南</b><small>GUIDE</small>
-          </button>
           <div class="home-tip" data-zh="两种模式的最高波数分别保存" data-en="BEST WAVES ARE SAVED SEPARATELY">两种模式的最高波数分别保存</div>
-        </div>
-      </div>
-      <div id="guidePanel" class="overlay guide-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="guideTitle">
-        <article class="guide-panel glass">
+          <article class="home-guide glass" aria-labelledby="guideTitle">
           <header class="guide-header">
             <div><div class="eyebrow">FIELD MANUAL // GUIDE</div><h2 id="guideTitle" data-zh="游戏指南" data-en="GAME GUIDE">游戏指南</h2></div>
-            <button class="guide-close" data-action="guide-close" aria-label="关闭 / Close">×</button>
           </header>
           <div class="guide-scroll">
             <section>
@@ -154,7 +147,8 @@ export class Hud {
             </section>
           </div>
           <footer><span data-zh="守住核心基地，延长最后防线" data-en="HOLD THE CORE. EXTEND THE LAST LINE.">守住核心基地，延长最后防线</span></footer>
-        </article>
+          </article>
+        </div>
       </div>
       <div id="gameOver" class="overlay hidden">
         <div class="game-over glass"><div class="eyebrow" data-zh="防线失守" data-en="LINE COLLAPSED">防线失守</div><h1 data-zh="基地已沦陷" data-en="BASE OVERRUN">基地已沦陷</h1>
@@ -215,17 +209,7 @@ export class Hud {
         if (action === 'restart') actions.onRestart();
         if (action === 'home') actions.onHome();
         if (action === 'language') actions.onLanguage();
-        if (action === 'guide') this.showGuide();
-        if (action === 'guide-close') this.hideGuide();
       });
-    });
-    root.querySelector('#guidePanel')?.addEventListener('click', (event) => {
-      if (event.target === event.currentTarget) this.hideGuide();
-    });
-    window.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && !this.root.querySelector('#guidePanel')?.classList.contains('hidden')) {
-        this.hideGuide();
-      }
     });
     root.querySelectorAll<HTMLElement>('[data-stance]').forEach((button) => {
       button.addEventListener('click', () => actions.onStance(button.dataset.stance as Stance));
@@ -321,15 +305,6 @@ export class Hud {
 
   hideHome(): void {
     this.root.querySelector('#homeScreen')?.classList.add('hidden');
-    this.hideGuide();
-  }
-
-  private showGuide(): void {
-    this.root.querySelector('#guidePanel')?.classList.remove('hidden');
-  }
-
-  private hideGuide(): void {
-    this.root.querySelector('#guidePanel')?.classList.add('hidden');
   }
 
   private stanceName(stance: Stance | null): string {
