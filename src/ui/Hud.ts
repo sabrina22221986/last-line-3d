@@ -142,7 +142,7 @@ export class Hud {
             </section>
             <section>
               <h3><i>05</i><span data-zh="建造与城门" data-en="BUILDING & GATES">建造与城门</span></h3>
-              <p data-zh="点击左下建造项后在网格放置，R 旋转，B 或 Esc 取消；数字 4—9 可快速选择前六种防线。不可把所有出生点通往基地的道路完全封死。城门放置后，点击已建成的城门即可开关：关闭时阻挡，打开时允许通行。" data-en="Choose a defense at bottom-left and place it on the grid. R rotates; B or Esc cancels; keys 4–9 select the first six defenses. You cannot seal every route from spawns to the base. Click a built gate to toggle it: closed blocks passage, open allows movement.">点击左下建造项后在网格放置，R 旋转，B 或 Esc 取消；数字 4—9 可快速选择前六种防线。不可把所有出生点通往基地的道路完全封死。城门放置后，点击已建成的城门即可开关：关闭时阻挡，打开时允许通行。</p>
+              <p data-zh="点击左下建造项后在网格放置，R 旋转，B 或 Esc 取消；数字 4—9 可快速选择前六种防线。墙、路障、塔和关闭的城门可以完全封死路线；丧尸会推进到阻挡前攻击，摧毁后继续前进。点击已建成的城门即可开关：关闭时阻挡，打开时允许通行。" data-en="Choose a defense at bottom-left and place it on the grid. R rotates; B or Esc cancels; keys 4–9 select the first six defenses. Walls, barriers, towers, and closed gates may seal every route; zombies advance to blockers, attack them, and continue after destroying them. Click a built gate to toggle it: closed blocks passage, open allows movement.">点击左下建造项后在网格放置，R 旋转，B 或 Esc 取消；数字 4—9 可快速选择前六种防线。墙、路障、塔和关闭的城门可以完全封死路线；丧尸会推进到阻挡前攻击，摧毁后继续前进。点击已建成的城门即可开关：关闭时阻挡，打开时允许通行。</p>
             </section>
             <section>
               <h3><i>06</i><span data-zh="资源与维修" data-en="RESOURCES & REPAIR">资源与维修</span></h3>

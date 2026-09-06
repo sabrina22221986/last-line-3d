@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GRID_SIZE, HALF_GRID } from '../config';
 
 const WIDTH = HALF_GRID * 2;
+const BREACH_COST = WIDTH * 4;
 const key = (x: number, z: number) => `${x},${z}`;
 
 export class FlowField {
@@ -53,20 +54,6 @@ export class FlowField {
     this.rebuild();
   }
 
-  wouldKeepRoutes(cells: string[], spawnPositions: THREE.Vector3[]): boolean {
-    if (!this.canOccupy(cells)) return false;
-    const previous = new Set(this.blocked);
-    cells.forEach((cell) => this.blocked.add(cell));
-    this.rebuild();
-    const valid = spawnPositions.every((spawn) => {
-      const [x, z] = this.worldToCell(spawn);
-      return this.distance.has(key(x, z));
-    });
-    this.blocked = previous;
-    this.rebuild();
-    return valid;
-  }
-
   directionAt(position: THREE.Vector3): THREE.Vector3 {
     const [cx, cz] = this.worldToCell(position);
     let best = this.distance.get(key(cx, cz)) ?? Infinity;
@@ -90,20 +77,50 @@ export class FlowField {
   private rebuild(): void {
     this.distance.clear();
     const center = HALF_GRID;
-    const queue: [number, number][] = [[center, center]];
+    type QueueEntry = [number, number, number];
+    const queue: QueueEntry[] = [];
+    const push = (entry: QueueEntry): void => {
+      queue.push(entry);
+      let index = queue.length - 1;
+      while (index > 0) {
+        const parent = Math.floor((index - 1) / 2);
+        if (queue[parent][0] <= entry[0]) break;
+        queue[index] = queue[parent];
+        index = parent;
+      }
+      queue[index] = entry;
+    };
+    const pop = (): QueueEntry | undefined => {
+      const first = queue[0];
+      const last = queue.pop();
+      if (!first || !last || queue.length === 0) return first;
+      let index = 0;
+      while (true) {
+        const left = index * 2 + 1;
+        const right = left + 1;
+        if (left >= queue.length) break;
+        const child = right < queue.length && queue[right][0] < queue[left][0] ? right : left;
+        if (queue[child][0] >= last[0]) break;
+        queue[index] = queue[child];
+        index = child;
+      }
+      queue[index] = last;
+      return first;
+    };
+    push([0, center, center]);
     this.distance.set(key(center, center), 0);
-    let head = 0;
-    while (head < queue.length) {
-      const [x, z] = queue[head++];
-      const nextDistance = (this.distance.get(key(x, z)) ?? 0) + 1;
+    while (queue.length) {
+      const [currentDistance, x, z] = pop()!;
+      if (currentDistance !== this.distance.get(key(x, z))) continue;
       for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]] as [number, number][]) {
         const nx = x + dx;
         const nz = z + dz;
         const cell = key(nx, nz);
-        if (nx < 0 || nz < 0 || nx >= WIDTH || nz >= WIDTH ||
-          this.blocked.has(cell) || this.distance.has(cell)) continue;
+        if (nx < 0 || nz < 0 || nx >= WIDTH || nz >= WIDTH) continue;
+        const nextDistance = currentDistance + (this.blocked.has(cell) ? BREACH_COST : 1);
+        if (nextDistance >= (this.distance.get(cell) ?? Infinity)) continue;
         this.distance.set(cell, nextDistance);
-        queue.push([nx, nz]);
+        push([nextDistance, nx, nz]);
       }
     }
   }

@@ -377,7 +377,6 @@ export class Game {
       enemy.attackCooldown -= delta;
       const position = enemy.mesh.position;
       const speed = enemy.speed * (enemy.slowUntil > performance.now() ? 0.48 : 1);
-      const nearbyDefense = this.buildSystem.findNear(position, enemy.kind === 'tank' ? 2.4 : 1.55);
       const shieldTarget = this.unitSystem.soldiers
         .filter((soldier) => soldier.kind === 'shield' && soldier.stance !== 'retreat')
         .reduce<Soldier | undefined>((nearest, soldier) => {
@@ -396,12 +395,18 @@ export class Game {
         }
         continue;
       }
-      if (nearbyDefense) {
+      const direction = shieldTarget
+        ? shieldTarget.mesh.position.clone().sub(position).setY(0).normalize()
+        : this.flow.directionAt(position);
+      const contactDistance = Math.max(enemy.kind === 'tank' ? 1.05 : 0.72, delta * speed + 0.2);
+      const blockingDefense = this.buildSystem.findBlockingAt(position) ??
+        this.buildSystem.findBlockingAt(position.clone().addScaledVector(direction, contactDistance));
+      if (blockingDefense) {
         if (enemy.attackCooldown <= 0) {
-          nearbyDefense.hp -= enemy.damage;
+          blockingDefense.hp -= enemy.damage;
           enemy.attackCooldown = 0.9;
-          this.flash(nearbyDefense.mesh.position, 0xef593f, 0.35);
-          if (nearbyDefense.hp <= 0) this.buildSystem.remove(nearbyDefense);
+          this.flash(blockingDefense.mesh.position, 0xef593f, 0.35);
+          if (blockingDefense.hp <= 0) this.buildSystem.remove(blockingDefense);
         }
         continue;
       }
@@ -413,9 +418,6 @@ export class Game {
         }
         continue;
       }
-      const direction = shieldTarget
-        ? shieldTarget.mesh.position.clone().sub(position).setY(0).normalize()
-        : this.flow.directionAt(position);
       position.addScaledVector(direction, delta * speed);
       enemy.mesh.rotation.y = Math.atan2(direction.x, direction.z);
       enemy.mesh.children[0].rotation.z = Math.sin(performance.now() * 0.007 * speed + enemy.id) * 0.12;
@@ -590,7 +592,10 @@ export class Game {
     if (!kind || !point) return;
     const placement = this.buildSystem.placementAt(point, kind);
     if (!placement.valid) {
-      this.hud.toast(this.text('该位置不可建造，必须保留一条通路', 'Cannot build here. Keep at least one route open.'), true);
+      this.hud.toast(this.text(
+        '该位置不可建造：请检查格子占用、边界或基地安全区',
+        'Cannot build here: check occupancy, boundaries, or the base safety zone',
+      ), true);
       return;
     }
     const remainingScrap = purchaseBuilding(this.scrap, kind);
@@ -659,16 +664,13 @@ export class Game {
     const gate = gates.find((item) => item.mesh === object);
     if (!gate) return false;
     const wasOpen = gate.isOpen;
-    if (!this.buildSystem.toggleGate(gate)) {
-      this.hud.toast(this.text(
-        '无法关闭城门：必须保留所有出生点到基地的通路',
-        'Cannot close gate: every spawn must retain a route to the base',
-      ), true);
-      return true;
-    }
+    this.buildSystem.toggleGate(gate);
     this.hud.toast(gate.isOpen
       ? this.text('城门已打开，丧尸可以通过', 'Gate opened: zombies can pass')
-      : this.text('城门已关闭，通路已重新计算', 'Gate closed: routes recalculated'));
+      : this.text(
+        '城门已关闭；若路线封死，丧尸会攻击阻挡',
+        'Gate closed; zombies will attack blockers if routes are sealed',
+      ));
     this.sound(wasOpen ? 150 : 260, 0.12);
     return true;
   }

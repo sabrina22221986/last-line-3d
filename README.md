@@ -50,10 +50,10 @@ npm run dev
 - Endless hordes attack from six directions; every wave steadily adds more zombies while all enemy types grow stronger.
 - 消灭丧尸获得废料，使用废料建造墙、机枪塔、狙击塔、迫击炮、减速网、地雷、路障、城门和维修站。
 - 混凝土墙消耗 35 废料，拥有 600 耐久，只负责可靠阻挡且不造成伤害；铁丝路障消耗 25 废料，拥有 230 耐久，较脆但会对贴近的丧尸每 0.5 秒造成 5 点伤害。
-- 城门消耗 120 废料，拥有 480 耐久，占据 2×1 网格。关闭时参与阻挡和流场寻路，打开时释放通路；若关闭会切断任一出生点到基地的唯一通路，操作会被拒绝。
+- 城门消耗 120 废料，拥有 480 耐久，占据 2×1 网格。关闭时参与阻挡和流场寻路，打开时释放通路；即使关闭后完全封路也允许操作。
 - 盾兵是高耐久近战前排，盾牌会降低来自正面的丧尸伤害，适合掩护远程士兵。
 - 维修站会周期性修复范围内建筑并治疗士兵；工程兵也可修复附近防线，医疗兵负责治疗友军。
-- 防线可以自由组合，但系统不允许完全封死所有出生点到基地的通路。
+- 墙、路障、塔和关闭的城门可以完全封死所有路线。丧尸会继续向基地推进，在接触阻挡建筑后攻击，摧毁后重新寻路并继续前进，不会卡死或穿墙。
 - 士兵不会自动生成；部署会消耗废料。进攻姿态会主动追击，右键可指定防守阵地，撤退命令会令其优先返回最近防线后方（没有防线时返回基地）。
 - 提前迎战可获得额外废料；基地归零后，本机将保存最高波次。
 
@@ -63,4 +63,5 @@ npm run dev
 - Left-click a completed gate to open or close it. Open gates allow passage; closed gates block zombies and update pathfinding.
 - Concrete Wall: 35 scrap, 600 HP, pure blocking with no damage.
 - Wire Barrier: 25 scrap, 230 HP, and deals 5 damage every 0.5 seconds to adjacent zombies.
-- Gate: 120 scrap, 480 HP, 2×1 grid. Closing is refused if it would cut off any spawn route.
+- Walls, barriers, towers, and closed gates may seal every route. Zombies advance to the blocking structure, attack it, then recalculate their route and continue once it is destroyed.
+- Gate: 120 scrap, 480 HP, 2×1 grid. It may be closed even when doing so seals the final route.

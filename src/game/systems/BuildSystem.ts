@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BUILDINGS, BASE_RADIUS, GRID_SIZE, SPAWN_POINTS } from '../config';
+import { BUILDINGS, BASE_RADIUS, GRID_SIZE } from '../config';
 import type { BuildingKind, Defense } from '../types';
 import { attachStatus } from '../ui/OverheadStatus';
 import { FlowField } from './FlowField';
@@ -8,6 +8,7 @@ export class BuildSystem {
   readonly defenses: Defense[] = [];
   selectedKind: BuildingKind | null = null;
   private nextId = 1;
+  private occupied = new Set<string>();
 
   constructor(
     private scene: THREE.Scene,
@@ -23,8 +24,8 @@ export class BuildSystem {
     const position = this.flow.snap(point);
     const cells = this.flow.getCells(position, spec.size[0], spec.size[1]);
     const outsideBase = position.length() > BASE_RADIUS + 2;
-    const spawns = SPAWN_POINTS.map(([x, z]) => new THREE.Vector3(x, 0, z));
-    const valid = outsideBase && this.flow.wouldKeepRoutes(cells, spawns);
+    const valid = outsideBase && this.flow.canOccupy(cells) &&
+      cells.every((cell) => !this.occupied.has(cell));
     return { valid, position, cells };
   }
 
@@ -40,12 +41,14 @@ export class BuildSystem {
       gateProgress: kind === 'gate' ? 0 : undefined,
     };
     this.defenses.push(defense);
+    cells.forEach((cell) => this.occupied.add(cell));
     if (this.blocksPath(kind)) this.flow.setBlocked(cells, true);
     return defense;
   }
 
   remove(defense: Defense): void {
     if (this.blocksPath(defense.kind)) this.flow.setBlocked(defense.cells, false);
+    defense.cells.forEach((cell) => this.occupied.delete(cell));
     this.scene.remove(defense.mesh);
     defense.mesh.traverse((object) => {
       if (object instanceof THREE.Mesh) {
@@ -68,11 +71,17 @@ export class BuildSystem {
       defense.mesh.position.distanceTo(position) < radius);
   }
 
+  findBlockingAt(position: THREE.Vector3): Defense | undefined {
+    const cell = this.flow.getCells(position, 1, 1)[0];
+    return this.defenses.find((defense) =>
+      this.blocksPath(defense.kind) &&
+      !(defense.kind === 'gate' && defense.isOpen) &&
+      defense.cells.includes(cell));
+  }
+
   toggleGate(gate: Defense): boolean {
     if (gate.kind !== 'gate') return false;
     if (gate.isOpen) {
-      const spawns = SPAWN_POINTS.map(([x, z]) => new THREE.Vector3(x, 0, z));
-      if (!this.flow.wouldKeepRoutes(gate.cells, spawns)) return false;
       this.flow.setBlocked(gate.cells, true);
       gate.isOpen = false;
     } else {
